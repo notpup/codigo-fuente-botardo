@@ -1,0 +1,27 @@
+{
+  "name": "tts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon ./client.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-polly": "^3.501.0",
+    "@discordjs/opus": "github:discordjs/opus",
+    "@discordjs/voice": "^0.16.1",
+    "@google-cloud/text-to-speech": "^5.0.2",
+    "aws-sdk": "^2.1545.0",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.4.1",
+    "ffmpeg-static": "^5.2.0",
+    "gtts": "^0.2.1",
+    "libsodium-wrappers": "^0.7.13",
+    "nodemon": "^3.0.3",
+    "say": "^0.16.0"
+  }
+}
