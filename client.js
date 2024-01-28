@@ -86,3 +86,5 @@ client.on("messageCreate", (message) => {
 })
 
 client.login(process.env.DISCORD_LOGINTOKEN)
+
+export default client
