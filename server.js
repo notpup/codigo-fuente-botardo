@@ -4,6 +4,6 @@ import discordclient from "./client.js"
 
 const app = express()
 
-app.listen(process.env.PORT, () => {
+app.listen(process.env.PORT,"0.0.0.0", () => {
 	console.log("Escuchando")
 })
