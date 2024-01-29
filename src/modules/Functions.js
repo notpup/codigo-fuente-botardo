@@ -6,7 +6,7 @@ const GetCounts = (Client) => {
 	let members = 0
 	Client.guilds.cache.forEach(e => {
 		servers++
-		members =+ e.memberCount
+		members = members + e.memberCount
 	})
 	return { servers, members }
 }

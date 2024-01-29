@@ -21,7 +21,6 @@ const client = new Client({
 
 client.on("ready", () => {
 	console.log("Bot en linea broder")
-
 	const func = () => {
 		const Counts = GetCounts(client)
 		client.user.setPresence({
@@ -30,10 +29,10 @@ client.on("ready", () => {
 					name: `${Counts.servers} servers w/ ${Counts.members} members`,
 					type: ActivityType.Watching
 				}
-			]
+			],
+			status: "dnd"
 		})
 	}
-
 	setInterval(func, 30*1000) // Update cada 30s
 	func()
 })
