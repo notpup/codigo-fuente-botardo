@@ -35,7 +35,7 @@ const CreateVoice = async (Text, Voice = "miguel", AudioName) => {
 		const promesa = new Promise((resolve, reject) => {
 
 			const VoiceConfig = GetVoice(Voice)
-			
+
 			const tts_settings = {
 				Engine: VoiceConfig.SupportedEngines[0],
 				LanguageCode: VoiceConfig.LanguageCode,
@@ -45,12 +45,15 @@ const CreateVoice = async (Text, Voice = "miguel", AudioName) => {
 				VoiceId: VoiceConfig.Id
 			}
 
-			Polly.synthesizeSpeech(tts_settings, (err, data) => {
+			Polly.synthesizeSpeech(tts_settings, async (err, data) => {
 				if (err) {
 					reject("Error al sintetizar")
 				}
 				if (!err && data.AudioStream) {
-					fs.writeFile(`./${AudioName}.mp3`, data.AudioStream, "base64", (err) => {
+					console.log(data)
+					const location = `./src/audio/${AudioName}.mp3`
+					const exist = await fs.existsSync(location)
+					fs.writeFile(exist ? location : "./src/audio/Default.mp3", data.AudioStream, "base64", (err) => {
 						if (err) {
 							console.log("Erro al guardar audio")
 							reject("Error al guardar el audio")
@@ -58,14 +61,16 @@ const CreateVoice = async (Text, Voice = "miguel", AudioName) => {
 							resolve(data.AudioStream)
 						}
 					})
+				} else {
+
 				}
 			})
 		})
 		return promesa
 	} catch (err) {
-		return 
+		return
 	}
-	
+
 }
 
 UpdateVoicesList()

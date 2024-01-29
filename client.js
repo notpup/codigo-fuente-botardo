@@ -1,5 +1,5 @@
 import { Client } from "discord.js"
-import { AudioPlayer, joinVoiceChannel, createAudioPlayer, createAudioResource } from "@discordjs/voice"
+import { AudioPlayer, joinVoiceChannel, createAudioPlayer, createAudioResource, AudioResource } from "@discordjs/voice"
 import "dotenv/config"
 
 import path from "path"
@@ -7,6 +7,7 @@ import path from "path"
 import { CreateVoice, GetVoice, GetAllVoices } from "./src/modules/VoiceClient.js"
 
 import * as url from 'url';
+import { createReadStream } from "fs"
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
@@ -62,7 +63,7 @@ client.on("messageCreate", (message) => {
 				voiceBuffer.then(AudioBuffer => {
 					const player = createAudioPlayer()
 					const parte = path.join(__dirname, `/src/audio/${message.guildId}.mp3`)
-					const resource = createAudioResource(parte, { inlineVolume: true })
+					const resource = createAudioResource(parte)//parte, { inlineVolume: true })
 					resource.volume.setVolume(2)
 
 					connection.subscribe(player)
