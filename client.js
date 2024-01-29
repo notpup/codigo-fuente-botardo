@@ -27,7 +27,7 @@ client.on("messageCreate", (message) => {
 		const msg = message.content
 
 		if (msg.substring(0, 1) == "'" && vc && vc.joinable && message.member.user.bot == false) {
-			let messageContent = msg.substring(2).trim()
+			let messageContent = msg.substring(2)
 			const split = messageContent.split(" ")
 
 			if (split[0] && split[0].toLowerCase() == "voices") { // Comando: "' voices"

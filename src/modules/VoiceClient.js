@@ -35,13 +35,14 @@ const CreateVoice = async (Text, Voice = "miguel", AudioName) => {
 		const promesa = new Promise((resolve, reject) => {
 
 			const VoiceConfig = GetVoice(Voice)
+			
 			const tts_settings = {
-				Engine: "standard",
+				Engine: VoiceConfig.SupportedEngines[0],
 				LanguageCode: VoiceConfig.LanguageCode,
 				OutputFormat: "mp3",
 				Text: Text,
 				TextType: "text",
-				VoiceId: VoiceConfig.Name
+				VoiceId: VoiceConfig.Id
 			}
 
 			Polly.synthesizeSpeech(tts_settings, (err, data) => {
