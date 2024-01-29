@@ -60,10 +60,10 @@ client.on("messageCreate", (message) => {
 				})
 
 				const voiceBuffer = CreateVoice(messageContent, UsedVoice, `${message.guildId}`)
-				voiceBuffer.then(AudioBuffer => {
+				voiceBuffer.then((FileName) => {
 					const player = createAudioPlayer()
-					const parte = path.join(__dirname, `/src/audio/${message.guildId}.mp3`)
-					const resource = createAudioResource(parte)//parte, { inlineVolume: true })
+					const parte = path.join(__dirname, `/src/audio/${FileName}.mp3`)
+					const resource = createAudioResource(parte, { inlineVolume: true })
 					resource.volume.setVolume(2)
 
 					connection.subscribe(player)

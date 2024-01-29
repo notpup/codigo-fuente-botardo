@@ -45,24 +45,25 @@ const CreateVoice = async (Text, Voice = "miguel", AudioName) => {
 				VoiceId: VoiceConfig.Id
 			}
 
-			Polly.synthesizeSpeech(tts_settings, async (err, data) => {
+			Polly.synthesizeSpeech(tts_settings, (err, data) => {
 				if (err) {
 					reject("Error al sintetizar")
 				}
 				if (!err && data.AudioStream) {
-					console.log(data)
 					const location = `./src/audio/${AudioName}.mp3`
-					const exist = await fs.existsSync(location)
-					fs.writeFile(exist ? location : "./src/audio/Default.mp3", data.AudioStream, "base64", (err) => {
+					const exist = fs.existsSync(location)
+					let Name = exist === true ? AudioName : "Default"
+					fs.writeFile(`./src/audio/${Name}.mp3`, data.AudioStream, "base64", (err) => {
 						if (err) {
 							console.log("Erro al guardar audio")
 							reject("Error al guardar el audio")
 						} else {
-							resolve(data.AudioStream)
+							console.log("not error devolviendo:", Name)
+							resolve(Name)
 						}
 					})
 				} else {
-
+					reject("Error al sintetizar x2")
 				}
 			})
 		})
