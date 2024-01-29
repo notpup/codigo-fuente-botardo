@@ -1,4 +1,4 @@
-import { Client } from "discord.js"
+import { ActivityType, Client } from "discord.js"
 import { AudioPlayer, joinVoiceChannel, createAudioPlayer, createAudioResource, AudioResource } from "@discordjs/voice"
 import "dotenv/config"
 
@@ -8,6 +8,7 @@ import { CreateVoice, GetVoice, GetAllVoices } from "./src/modules/VoiceClient.j
 
 import * as url from 'url';
 import { createReadStream } from "fs"
+import { GetCounts } from "./src/modules/Functions.js"
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
@@ -20,6 +21,21 @@ const client = new Client({
 
 client.on("ready", () => {
 	console.log("Bot en linea broder")
+
+	const func = () => {
+		const Counts = GetCounts(client)
+		client.user.setPresence({
+			activities: [
+				{
+					name: `${Counts.servers} servers w/ ${Counts.members} members`,
+					type: ActivityType.Watching
+				}
+			]
+		})
+	}
+
+	setInterval(func, 30*1000) // Update cada 30s
+	func()
 })
 
 client.on("messageCreate", (message) => {
