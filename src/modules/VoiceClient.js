@@ -50,7 +50,7 @@ const CreateVoice = async (Text, Voice = "miguel", AudioName) => {
 					reject("Error al sintetizar")
 				}
 				if (!err && data.AudioStream) {
-					fs.writeFile(`./src/audio/${AudioName}.mp3`, data.AudioStream, "base64", (err) => {
+					fs.writeFile(`./${AudioName}.mp3`, data.AudioStream, "base64", (err) => {
 						if (err) {
 							console.log("Erro al guardar audio")
 							reject("Error al guardar el audio")
