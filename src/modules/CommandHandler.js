@@ -104,9 +104,9 @@ const CommandsInit = async (client) => {
 					return interaction.reply("Voz no encontrada, podes ver la lista de voces usando el comando /voices")
 				}
 
-				let data = await usersdata.findOne({ userid })
+				let data = await users.findOne({ userid })
 				if (data == null) {
-					data = await usersdata.create({
+					data = await users.create({
 						userid,
 						voice: finded.Id
 					})
@@ -129,7 +129,7 @@ const CommandsInit = async (client) => {
 					if (finded) {
 						voice = finded.Id
 					} else {
-						usersdata.findOne({userid})
+						users.findOne({userid})
 					}
 				}
 			}
