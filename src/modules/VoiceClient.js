@@ -76,4 +76,4 @@ const CreateVoice = async (Text, Voice = "miguel", AudioName) => {
 
 UpdateVoicesList()
 
-export { CreateVoice, GetVoice, GetAllVoices }
+export { CreateVoice, GetVoice, GetAllVoices, Voices }

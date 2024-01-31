@@ -1,3 +1,5 @@
+import users from "../models/user.model.js"
+
 const UpdateActivity = (Client, ActivityText) => {
 }
 
@@ -9,6 +11,10 @@ const GetCounts = (Client) => {
 		members = members + e.memberCount
 	})
 	return { servers, members }
+}
+
+const DetectVoice = ({ userid, voice, text }) => {
+
 }
 
 export { GetCounts }
