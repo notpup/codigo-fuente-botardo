@@ -1,8 +1,16 @@
-import { ApplicationCommandOptionType, REST, Routes } from "discord.js"
-import { GetAllVoices, Voices } from "./VoiceClient.js"
-import users from "../models/user.model.js"
+import { ApplicationCommandOptionType, REST, Routes, EmbedBuilder } from "discord.js"
 
 import "dotenv/config"
+
+
+
+
+
+import { GetAllVoices, Voices } from "./VoiceClient.js"
+import { GetExactVoiceName, VoiceManager } from "./Functions.js"
+
+import users from "../models/user.model.js"
+import servers from "../models/server.model.js"
 
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_LOGINTOKEN)
 
@@ -17,8 +25,7 @@ const CreateVoicesChoices = () => {
 			value: e.Id
 		})
 	})
-	//arr = arr.slice(arr.length - 3)
-	//console.log(arr)
+
 	return arr
 }
 
@@ -65,7 +72,23 @@ const GetSlashCommands = () => {
 					required: true,
 				}
 			]
-		}
+		},
+		{
+			name: "voices",
+			description: "Devuelve la lista de voces",
+			options: [
+				{
+					name: "pagina",
+					description: "Numero de pagina de voces",
+					type: ApplicationCommandOptionType.Number,
+					required: true,
+				}
+			]
+		},
+		{
+			name: "invite",
+			description: "Devuelve el link de invitacion",
+		},
 	]
 }
 
@@ -96,41 +119,72 @@ const CommandsInit = async (client) => {
 			const userid = interaction.user.id
 			if (interaction.commandName == "myvoice") {
 				const voice = interaction.options.get("voz")
-				const finded = GetAllVoices().find(e => {
-					if (e.Name.toLowerCase() === voice.value.toLowerCase() || e.Id.toLowerCase() === voice.value.toLowerCase()) return true
+
+				let userdata = await users.findOne({ userid })
+				let serverData = await servers.findOne({ guildid: interaction.guildId })
+
+				if (userdata == null) {
+					userdata = await users.create({
+						userid,
+					})
+				}
+				if (serverData == null) {
+					serverData = await servers.create({
+						guildid: interaction.guildId,
+					})
+				}
+
+				const exactVoice = GetExactVoiceName(voice.value, (userdata.premium === true || serverData.premium === true))
+				if (!exactVoice) {
+					if (String(voice.value).toLowerCase() === "custom") {
+						return interaction.reply("No tenes permiso para usar esa voz!")
+					} else {
+						return interaction.reply("Voz no encontrada, podes ver la lista de voces usando el comando /voices")
+					}
+					
+				}
+
+				userdata.voice = exactVoice.Id
+				await userdata.save()
+
+				interaction.reply(`Tu voz por defecto ahora es **${exactVoice.Id}**`)
+			} else if (interaction.commandName == "invite") {
+				interaction.reply({ content: `Enlace de invitacion:\n${process.env.INVITELINK}`, ephemeral: true })
+			} else if (interaction.commandName == "voices") {
+				let pagina = interaction.options.get("pagina")
+				const page = pagina.value || 1
+
+				const voicesEmbed = new EmbedBuilder()
+				.setColor(0x0099FF)
+				.setTitle(`Lista de voces no-premium: (Pagina ${page})`)
+				
+
+				GetAllVoices().slice(page*25, (page+1)*25).forEach(e => {
+					voicesEmbed.addFields({
+						name: e.Id, value: e.LanguageName, inline: true
+					})
+				})
+				console.log(voicesEmbed)
+				
+
+				interaction.reply({ embeds: [ voicesEmbed ] })
+
+			} else if (interaction.commandName == "tts" || interaction.commandName == "speak") {
+				let text = interaction.options.get("texto")
+				let voice = interaction.options.get("voz")
+
+				const response = await VoiceManager({
+					userid: userid,
+					voice: voice ? voice.value.trim() : null,
+					text: text.value.trim(),
+					voiceChannelId: interaction.member.voice.channelId,
+					guildId: interaction.guildId
 				})
 
-				if (!finded) {
-					return interaction.reply("Voz no encontrada, podes ver la lista de voces usando el comando /voices")
-				}
-
-				let data = await users.findOne({ userid })
-				if (data == null) {
-					data = await users.create({
-						userid,
-						voice: finded.Id
-					})
+				if (response.success) {
+					interaction.reply(response.message)
 				} else {
-					data.voice = finded.Id
-					await data.save()
-				}
-				
-				interaction.reply(`Tu voz por defecto ahora es **${finded.Id}**`)
-			} else if (interaction.commandName == "tts" || interaction.commandName == "speak") {
-				let text = interaction.options.get("text")
-				let voice = interaction.options.get("voice")
-
-				text.value = text.value.trim()
-
-				if (voice && voice.value) {
-					const finded = GetAllVoices().find(e => {
-						if (e.Name.toLowerCase() === voice.value.toLowerCase() || e.Id.toLowerCase() === voice.value.toLowerCase()) return true
-					})
-					if (finded) {
-						voice = finded.Id
-					} else {
-						users.findOne({userid})
-					}
+					interaction.reply(response.message)
 				}
 			}
 		})

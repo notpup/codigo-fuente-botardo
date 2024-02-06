@@ -8,7 +8,7 @@ import { createReadStream } from "fs"
 import "dotenv/config"
 
 import { CreateVoice, GetVoice, GetAllVoices } from "./src/modules/VoiceClient.js"
-import { GetCounts } from "./src/modules/Functions.js"
+import { GetCounts, VoiceManager } from "./src/modules/Functions.js"
 import CommandsInit from "./src/modules/CommandHandler.js"
 import usersdata from "./src/models/user.model.js"
 
@@ -76,6 +76,18 @@ client.on("messageCreate", async (message) => {
 
 				if (messageContent.length == 0) return
 
+				if (messageContent.toLowerCase() == "pene"){
+					message.reply("comes")
+				}
+				
+				const response = await VoiceManager({
+					userid: message.author.id,
+					voice: Voice ? Voice.trim() : null,
+					text: messageContent,
+					voiceChannelId: vc.id,
+					guildId: message.guildId
+				})
+				/*
 				const connection = joinVoiceChannel({
 					channelId: vc.id,
 					guildId: vc.guildId,
@@ -94,11 +106,9 @@ client.on("messageCreate", async (message) => {
 				})
 				.catch(err => {
 					message.reply("Error al procesar la solicitud en AWS")
-				})
+				})*/
 
-				if (messageContent.toLowerCase() == "pene"){
-					message.reply("comes")
-				}
+				
 			}
 		} else {
 		}
