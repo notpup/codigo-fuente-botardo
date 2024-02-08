@@ -1,5 +1,5 @@
 import { ActivityType, Client, SlashCommandBuilder } from "discord.js"
-import { AudioPlayer, joinVoiceChannel, createAudioPlayer, createAudioResource, AudioResource } from "@discordjs/voice"
+import { AudioPlayer, joinVoiceChannel, createAudioPlayer, createAudioResource, AudioResource, getVoiceConnection } from "@discordjs/voice"
 import { connect } from "mongoose"
 import path from "path"
 import * as url from 'url';
@@ -115,6 +115,32 @@ client.on("messageCreate", async (message) => {
 	} catch (err) {
 		console.log("Hubo un error en la deteccion de mensaje")
 		console.log(err)
+	}
+})
+
+client.on("voiceStateUpdate", async (oldState, newState) => {
+	if (newState.channelId === null) {
+		//const disconnectionChannelId = oldState.channelId
+		if (oldState.channel) {
+			const botIsIn = oldState.channel.members.some(member => {
+				if (member.user.id == client.user.id) return true
+			})
+			const hasUsers = oldState.channel.members.some(member => {
+				if (!member.user.bot) return true
+			})
+
+			if (!hasUsers && botIsIn) {
+				const connection = getVoiceConnection(oldState.guild.id)
+				if (connection) {
+					connection.destroy()
+				}
+			}
+		}
+	} else {
+		
+		//console.log("usuario id:", newState.id)
+		//console.log("Usuario se conecto al vc:", newState.channelId)
+		
 	}
 })
 
