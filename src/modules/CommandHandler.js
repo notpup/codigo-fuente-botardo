@@ -50,6 +50,24 @@ const GetSlashCommands = () => {
 			]
 		},
 		{
+			name: "speak",
+			description: "Reproduce texto a voz con el bot",
+			options: [
+				{
+					name: "texto",
+					description: "Texto a escuchar",
+					type: ApplicationCommandOptionType.String,
+					required: true
+				},
+				{
+					name: "voz",
+					description: "Nombre de la voz a elegir",
+					type: ApplicationCommandOptionType.String,
+					required: false,
+				},
+			]
+		},
+		{
 			name: "myvoice",
 			description: "Establece tu voz al momento de hablar",
 			options: [
@@ -76,6 +94,18 @@ const GetSlashCommands = () => {
 		{
 			name: "voices",
 			description: "Devuelve la lista de voces",
+			options: [
+				{
+					name: "pagina",
+					description: "Numero de pagina de voces",
+					type: ApplicationCommandOptionType.Number,
+					required: true,
+				}
+			]
+		},
+		{
+			name: "customvoices",
+			description: "Devuelve la lista de voces custom",
 			options: [
 				{
 					name: "pagina",
@@ -165,8 +195,6 @@ const CommandsInit = async (client) => {
 					})
 				})
 				console.log(voicesEmbed)
-				
-
 				interaction.reply({ embeds: [ voicesEmbed ] })
 
 			} else if (interaction.commandName == "tts" || interaction.commandName == "speak") {

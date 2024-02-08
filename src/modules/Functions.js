@@ -118,7 +118,7 @@ const VoiceManager = async ({ userid, voice, text, voiceChannelId, guildId }) =>
 				})
 			};
 
-			const res = await fetch(`${process.env.AI_VOICE_API_ROOT}/v1/text-to-speech/${userData.customvoice.selectedId}`, options)
+			const res = await fetch(`${process.env.AI_VOICE_API_ROOT}/v1/text-to-speech/${userData.customvoice.selectedId}?optimize_streaming_latency=4`, options)
 				.then(response => response.arrayBuffer())
 				.then(response => {
 					const parte = path.join(__dirname, "../..", `/src/audio/${guildId}.mp3`)
