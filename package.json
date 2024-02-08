@@ -23,8 +23,5 @@
     "libsodium-wrappers": "^0.7.13",
     "mongoose": "^8.1.1",
     "nodemon": "^3.0.3"
-  },
-  "devDependencies": {
-    "node-opus": "^0.3.3"
   }
 }
