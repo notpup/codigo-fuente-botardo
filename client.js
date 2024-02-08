@@ -1,14 +1,16 @@
-import { ActivityType, Client } from "discord.js"
-import { AudioPlayer, joinVoiceChannel, createAudioPlayer, createAudioResource, AudioResource } from "@discordjs/voice"
-import "dotenv/config"
-
+import { ActivityType, Client, SlashCommandBuilder } from "discord.js"
+import { AudioPlayer, joinVoiceChannel, createAudioPlayer, createAudioResource, AudioResource, getVoiceConnection } from "@discordjs/voice"
+import { connect } from "mongoose"
 import path from "path"
-
-import { CreateVoice, GetVoice, GetAllVoices } from "./src/modules/VoiceClient.js"
-
 import * as url from 'url';
 import { createReadStream } from "fs"
-import { GetCounts } from "./src/modules/Functions.js"
+
+import "dotenv/config"
+
+import { CreateVoice, GetVoice, GetAllVoices } from "./src/modules/VoiceClient.js"
+import { GetCounts, VoiceManager } from "./src/modules/Functions.js"
+import CommandsInit from "./src/modules/CommandHandler.js"
+import usersdata from "./src/models/user.model.js"
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
@@ -21,6 +23,7 @@ const client = new Client({
 
 client.on("ready", () => {
 	console.log("Bot en linea broder")
+	CommandsInit(client)
 	const func = () => {
 		const Counts = GetCounts(client)
 		client.user.setPresence({
@@ -37,13 +40,13 @@ client.on("ready", () => {
 	func()
 })
 
-client.on("messageCreate", (message) => {
+client.on("messageCreate", async (message) => {
 	try {
 		const vc = message.member.voice.channel
 		const msg = message.content
 
 		if (msg.substring(0, 1) == "'" && vc && vc.joinable && message.member.user.bot == false) {
-			let messageContent = msg.substring(2)
+			let messageContent = msg.substring(2).trim()
 			const split = messageContent.split(" ")
 
 			if (split[0] && split[0].toLowerCase() == "voices") { // Comando: "' voices"
@@ -63,11 +66,28 @@ client.on("messageCreate", (message) => {
 				if (Voice) {
 					UsedVoice = Voice.Id
 					split.shift()
-					messageContent = split.join(" ")
+					messageContent = split.join(" ").trim()
+				} else {
+					const finded = await usersdata.findOne({userid: message.author.id})
+					if (finded) {
+						UsedVoice = finded.voice
+					}
 				}
 
 				if (messageContent.length == 0) return
 
+				if (messageContent.toLowerCase() == "pene"){
+					message.reply("comes")
+				}
+				
+				const response = await VoiceManager({
+					userid: message.author.id,
+					voice: Voice ? Voice.trim() : null,
+					text: messageContent,
+					voiceChannelId: vc.id,
+					guildId: message.guildId
+				})
+				/*
 				const connection = joinVoiceChannel({
 					channelId: vc.id,
 					guildId: vc.guildId,
@@ -79,18 +99,16 @@ client.on("messageCreate", (message) => {
 					const player = createAudioPlayer()
 					const parte = path.join(__dirname, `/src/audio/${FileName}.mp3`)
 					const resource = createAudioResource(parte, { inlineVolume: true })
-					resource.volume.setVolume(2)
+					resource.volume.setVolume(1.5)
 
 					connection.subscribe(player)
 					player.play(resource)
 				})
 				.catch(err => {
 					message.reply("Error al procesar la solicitud en AWS")
-				})
+				})*/
 
-				if (messageContent.toLowerCase() == "pene"){
-					message.reply("comes")
-				}
+				
 			}
 		} else {
 		}
@@ -98,9 +116,39 @@ client.on("messageCreate", (message) => {
 		console.log("Hubo un error en la deteccion de mensaje")
 		console.log(err)
 	}
+})
 
+client.on("voiceStateUpdate", async (oldState, newState) => {
+	console.log(oldState.channelId, newState.channelId)
+	if (oldState.channelId != newState.channelId) {
+		//const disconnectionChannelId = oldState.channelId
+		if (oldState.channel) {
+			const botIsIn = oldState.channel.members.some(member => {
+				if (member.user.id == client.user.id) return true
+			})
+			const hasUsers = oldState.channel.members.some(member => {
+				if (!member.user.bot) return true
+			})
+
+			if (!hasUsers && botIsIn) {
+				const connection = getVoiceConnection(oldState.guild.id)
+				if (connection) {
+					connection.destroy()
+				}
+			}
+		}
+	} else {
+		
+		//console.log("usuario id:", newState.id)
+		//console.log("Usuario se conecto al vc:", newState.channelId)
+		
+	}
 })
 
 client.login(process.env.DISCORD_LOGINTOKEN)
+
+connect(process.env.MONGOCONNECT_URI).then(() => {
+	console.log("Database conectada")
+})
 
 export default client
