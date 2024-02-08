@@ -119,7 +119,8 @@ client.on("messageCreate", async (message) => {
 })
 
 client.on("voiceStateUpdate", async (oldState, newState) => {
-	if (newState.channelId === null) {
+	console.log(oldState.channelId, newState.channelId)
+	if (oldState.channelId != newState.channelId) {
 		//const disconnectionChannelId = oldState.channelId
 		if (oldState.channel) {
 			const botIsIn = oldState.channel.members.some(member => {
