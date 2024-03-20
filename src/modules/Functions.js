@@ -9,6 +9,7 @@ import users from "../models/user.model.js"
 import fs from "fs"
 import path from "path"
 import * as url from "url"
+import { warn } from "console"
 
 const __filename = url.fileURLToPath(import.meta.url)
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
@@ -162,12 +163,11 @@ const VoiceManager = async ({ userid, voice, text, voiceChannelId, guildId }) =>
 				adapterCreator: guild.voiceAdapterCreator
 			})
 
-			const res = await CreateVoice(text, voice, guildId)
+			const res = await CreateVoice(text, voice || userData.voice, guildId)
 				.then(FileName => {
 					const player = createAudioPlayer()
 					const parte = path.join(__dirname, "../..", `/src/audio/${FileName}.mp3`)
 					const resource = createAudioResource(parte, { inlineVolume: true })
-					console.log("audio resource")
 					resource.volume.setVolume(guildData.volume)
 					connection.subscribe(player)
 					player.play(resource)
