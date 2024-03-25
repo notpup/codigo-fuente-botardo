@@ -48,7 +48,9 @@ client.on("ready", () => {
 
 client.on("messageCreate", async (message) => {
 	try {
+		if (message.member == null) return
 		if (message.member.voice == null) return
+		if (message.member.voice.channel == nill) return
 		
 		const vc = message.member.voice.channel
 		const msg = message.content
