@@ -25,16 +25,22 @@ client.on("ready", () => {
 	console.log("Bot en linea broder")
 	CommandsInit(client)
 	const func = () => {
-		const Counts = GetCounts(client)
-		client.user.setPresence({
-			activities: [
-				{
-					name: `${Counts.servers} servers w/ ${Counts.members} members`,
-					type: ActivityType.Watching
-				}
-			],
-			status: "dnd"
-		})
+		try {
+			const Counts = GetCounts(client)
+			client.user.setPresence({
+				activities: [
+					{
+						name: `${Counts.servers} servers w/ ${Counts.members} members`,
+						type: ActivityType.Watching
+					}
+				],
+				status: "dnd"
+			})
+		} catch(err) {
+			console.log("Error en setPrecense:")
+			console.log(err)
+		}
+		
 	}
 	setInterval(func, 30 * 1000) // Update cada 30s
 	func()
@@ -42,6 +48,8 @@ client.on("ready", () => {
 
 client.on("messageCreate", async (message) => {
 	try {
+		if (message.member.voice == null) return
+		
 		const vc = message.member.voice.channel
 		const msg = message.content
 
