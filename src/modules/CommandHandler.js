@@ -217,6 +217,8 @@ const CommandsInit = async (client) => {
 					}
 				}
 			} catch (err) {
+				console.log("CRITICAL ERROR:")
+				console.log(err)
 				interaction.reply("error")
 			}
 		})
