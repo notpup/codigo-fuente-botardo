@@ -147,7 +147,6 @@ const CommandsInit = async (client) => {
 			try {
 				if (!interaction.isChatInputCommand()) return
 				const userid = interaction.user.id
-				console.log(interaction)
 				await interaction.deferReply()
 				if (interaction.commandName == "myvoice") {
 
