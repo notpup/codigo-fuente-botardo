@@ -146,9 +146,11 @@ const CommandsInit = async (client) => {
 		client.on("interactionCreate", async (interaction) => {
 			try {
 				if (!interaction.isChatInputCommand()) return
-
 				const userid = interaction.user.id
+				console.log(interaction)
+				await interaction.deferReply()
 				if (interaction.commandName == "myvoice") {
+
 					const voice = interaction.options.get("voz")
 
 					let userdata = await users.findOne({ userid })
@@ -168,9 +170,9 @@ const CommandsInit = async (client) => {
 					const exactVoice = GetExactVoiceName(voice.value, (userdata.premium === true || serverData.premium === true))
 					if (!exactVoice) {
 						if (String(voice.value).toLowerCase() === "custom") {
-							return interaction.reply("No tenes permiso para usar esa voz!")
+							return await interaction.editReply("No tenes permiso para usar esa voz!")
 						} else {
-							return interaction.reply("Voz no encontrada, podes ver la lista de voces usando el comando /voices")
+							return await interaction.editReply("Voz no encontrada, podes ver la lista de voces usando el comando /voices")
 						}
 
 					}
@@ -178,9 +180,9 @@ const CommandsInit = async (client) => {
 					userdata.voice = exactVoice.Id
 					await userdata.save()
 
-					interaction.reply(`Tu voz por defecto ahora es **${exactVoice.Id}**`)
+					return await interaction.editReply(`Tu voz por defecto ahora es **${exactVoice.Id}**`)
 				} else if (interaction.commandName == "invite") {
-					interaction.reply({ content: `Enlace de invitacion:\n${process.env.INVITELINK}`, ephemeral: true })
+					return await interaction.editReply({ content: `Enlace de invitacion:\n${process.env.INVITELINK}`, ephemeral: true })
 				} else if (interaction.commandName == "voices") {
 					let pagina = interaction.options.get("pagina")
 					const page = pagina.value || 1
@@ -196,7 +198,7 @@ const CommandsInit = async (client) => {
 						})
 					})
 					console.log(voicesEmbed)
-					interaction.reply({ embeds: [voicesEmbed] })
+					interaction.editReply({ embeds: [voicesEmbed] })
 
 				} else if (interaction.commandName == "tts" || interaction.commandName == "speak") {
 					let text = interaction.options.get("texto")
@@ -211,15 +213,15 @@ const CommandsInit = async (client) => {
 					})
 
 					if (response.success) {
-						interaction.reply(response.message)
+						return await interaction.editReply(response.message)
 					} else {
-						interaction.reply(response.message)
+						return await interaction.editReply(response.message)
 					}
 				}
 			} catch (err) {
 				console.log("CRITICAL ERROR:")
 				console.log(err)
-				interaction.reply("error")
+				return await interaction.editReply("error")
 			}
 		})
 
