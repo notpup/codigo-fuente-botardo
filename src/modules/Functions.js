@@ -111,7 +111,12 @@ const VoiceManager = async ({ userid, voice, text, voiceChannelId, guildId }) =>
 				body: JSON.stringify({
 					model_id: "eleven_flash_v2_5",
 					text: text,
-					language_code: "es"
+					language_code: "es",
+					voice_settings: {
+						"stability": userData.customvoice.stability,
+						"similarity_boost": userData.customvoice.similarity,
+						"style": userData.customvoice.exaggeration,
+					}
 				})
 			};
 
