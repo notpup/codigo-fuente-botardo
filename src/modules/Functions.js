@@ -116,7 +116,13 @@ const VoiceManager = async ({ userid, voice, text, voiceChannelId, guildId }) =>
 			};
 
 			const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${userData.customvoice.selectedId}`, options)
+
 			console.log("custom voice res:", res.status)
+			if (res.status != 200) {
+				const json = await res.json()
+				console.log("req json:", json)
+			}
+			
 			const audioBuffer = await res.arrayBuffer()
 			const folderTrace = path.join(__dirname, "../..", `/src/audio/${guildId}.mp3`)
 			const data = fs.writeFileSync(folderTrace, Buffer.from(audioBuffer), "base64")
