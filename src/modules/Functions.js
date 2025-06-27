@@ -111,15 +111,11 @@ const VoiceManager = async ({ userid, voice, text, voiceChannelId, guildId }) =>
 				body: JSON.stringify({
 					model_id: "eleven_multilingual_v2",
 					text: text,
-					voice_settings: {
-						"stability": userData.customvoice.stability,
-						"similarity_boost": userData.customvoice.similarity,
-						"style": userData.customvoice.exaggeration,
-					}
+					
 				})
 			};
 
-			const res = await fetch(`${process.env.AI_VOICE_API_ROOT}/v1/text-to-speech/${userData.customvoice.selectedId}`, options)
+			const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${userData.customvoice.selectedId}`, options)
 			console.log("custom voice res:", res.status)
 			const audioBuffer = await res.arrayBuffer()
 			const folderTrace = path.join(__dirname, "../..", `/src/audio/${guildId}.mp3`)
