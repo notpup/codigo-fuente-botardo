@@ -111,9 +111,7 @@ const VoiceManager = async ({ userid, voice, text, voiceChannelId, guildId }) =>
 				body: JSON.stringify({
 					model_id: "eleven_flash_v2_5",
 					text: text,
-					seed: "50000",
 					language_code: "es"
-
 				})
 			};
 
