@@ -119,45 +119,24 @@ const VoiceManager = async ({ userid, voice, text, voiceChannelId, guildId }) =>
 				})
 			};
 
-			const res = await fetch(`${process.env.AI_VOICE_API_ROOT}/v1/text-to-speech/${userData.customvoice.selectedId}?optimize_streaming_latency=4`, options)
+			const res = await fetch(`${process.env.AI_VOICE_API_ROOT}/v1/text-to-speech/${userData.customvoice.selectedId}`, options)
 			console.log("custom voice res:", res.status)
-
-
-			res.then(response => response.arrayBuffer())
-				.then(response => {
-					const parte = path.join(__dirname, "../..", `/src/audio/${guildId}.mp3`)
-					const data = fs.writeFileSync(parte, Buffer.from(response), "base64")
-				})
-				.then(err => {
-					if (!err) {
-						const parte = path.join(__dirname, "../..", `/src/audio/${guildId}.mp3`)
-						const connection = joinVoiceChannel({
-							channelId: voiceChannelId,
-							guildId: guildId,
-							adapterCreator: guild.voiceAdapterCreator
-						})
-						const player = createAudioPlayer()
-						const resource = createAudioResource(parte, { inlineVolume: true })
-						resource.volume.setVolume(0.5)
-						connection.subscribe(player)
-						player.play(resource)
-						return {
-							success: true,
-							message: text
-						}
-					}
-				})
-				.catch(err => {
-					console.error(err)
-					return {
-						success: false,
-						message: "Error en la funcion CreateCustomVoice()"
-					}
-				}
-				);
+			const audioBuffer = await res.arrayBuffer()
+			const folderTrace = path.join(__dirname, "../..", `/src/audio/${guildId}.mp3`)
+			const data = fs.writeFileSync(folderTrace, Buffer.from(audioBuffer), "base64")
+			const connection = joinVoiceChannel({
+				channelId: voiceChannelId,
+				guildId: guildId,
+				adapterCreator: guild.voiceAdapterCreator
+			})
+			const player = createAudioPlayer()
+			const resource = createAudioResource(folderTrace, { inlineVolume: true })
+			resource.volume.setVolume(0.5)
+			connection.subscribe(player)
+			player.play(resource)
 			return {
-				success: res.success,
-				message: res.message
+				success: true,
+				message: text
 			}
 		} else {
 			const connection = joinVoiceChannel({
