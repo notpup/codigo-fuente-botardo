@@ -109,18 +109,21 @@ const VoiceManager = async ({ userid, voice, text, voiceChannelId, guildId }) =>
 					"xi-api-key": process.env.AI_VOICE_API_KEY
 				},
 				body: JSON.stringify({
-					model_id: "eleven_multilingual_v2",
+					model_id: "eleven_flash_v2_5",
 					text: text,
-					
+					seed: "50000",
+					language_code: "es"
+
 				})
 			};
 
-			const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${userData.customvoice.selectedId}`, options)
+			const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${userData.customvoice.selectedId}?optimize_streaming_latency=3`, options)
 
 			console.log("custom voice res:", res.status)
 			if (res.status != 200) {
 				const json = await res.json()
 				console.log("req json:", json)
+				throw new Error("Error en la solicitud, esta es la informacion del body:" + toString(json))
 			}
 			
 			const audioBuffer = await res.arrayBuffer()
