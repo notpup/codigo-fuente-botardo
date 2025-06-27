@@ -92,7 +92,7 @@ const VoiceManager = async ({ userid, voice, text, voiceChannelId, guildId }) =>
 			success: false,
 			message: "No puedo entrar al canal de voz!"
 		}
-		console.log(voice)
+		console.log("Voice:", voice)
 		if ((voice || userData.voice).toLowerCase() == "custom" && (guildData.premium === false && userData.premium === false)) {
 			return {
 				success: false,
@@ -120,7 +120,10 @@ const VoiceManager = async ({ userid, voice, text, voiceChannelId, guildId }) =>
 			};
 
 			const res = await fetch(`${process.env.AI_VOICE_API_ROOT}/v1/text-to-speech/${userData.customvoice.selectedId}?optimize_streaming_latency=4`, options)
-				.then(response => response.arrayBuffer())
+			console.log("custom voice res:", res.status)
+
+
+			res.then(response => response.arrayBuffer())
 				.then(response => {
 					const parte = path.join(__dirname, "../..", `/src/audio/${guildId}.mp3`)
 					const data = fs.writeFileSync(parte, Buffer.from(response), "base64")
