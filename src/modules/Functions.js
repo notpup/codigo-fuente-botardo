@@ -9,6 +9,7 @@ import users from "../models/user.model.js"
 import fs from "fs"
 import path from "path"
 import * as url from "url"
+import { warn } from "console"
 
 const __filename = url.fileURLToPath(import.meta.url)
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
@@ -91,7 +92,7 @@ const VoiceManager = async ({ userid, voice, text, voiceChannelId, guildId }) =>
 			success: false,
 			message: "No puedo entrar al canal de voz!"
 		}
-		console.log(voice)
+		console.log("Voice:", voice)
 		if ((voice || userData.voice).toLowerCase() == "custom" && (guildData.premium === false && userData.premium === false)) {
 			return {
 				success: false,
@@ -108,8 +109,9 @@ const VoiceManager = async ({ userid, voice, text, voiceChannelId, guildId }) =>
 					"xi-api-key": process.env.AI_VOICE_API_KEY
 				},
 				body: JSON.stringify({
-					model_id: "eleven_multilingual_v2",
+					model_id: "eleven_flash_v2_5",
 					text: text,
+					language_code: "es",
 					voice_settings: {
 						"stability": userData.customvoice.stability,
 						"similarity_boost": userData.customvoice.similarity,
@@ -118,42 +120,31 @@ const VoiceManager = async ({ userid, voice, text, voiceChannelId, guildId }) =>
 				})
 			};
 
-			const res = await fetch(`${process.env.AI_VOICE_API_ROOT}/v1/text-to-speech/${userData.customvoice.selectedId}`, options)
-				.then(response => response.arrayBuffer())
-				.then(response => {
-					const parte = path.join(__dirname, "../..", `/src/audio/${guildId}.mp3`)
-					const data = fs.writeFileSync(parte, Buffer.from(response), "base64")
-				})
-				.then(err => {
-					if (!err) {
-						const parte = path.join(__dirname, "../..", `/src/audio/${guildId}.mp3`)
-						const connection = joinVoiceChannel({
-							channelId: voiceChannelId,
-							guildId: guildId,
-							adapterCreator: guild.voiceAdapterCreator
-						})
-						const player = createAudioPlayer()
-						const resource = createAudioResource(parte, { inlineVolume: true })
-						resource.volume.setVolume(0.5)
-						connection.subscribe(player)
-						player.play(resource)
-						return {
-							success: true,
-							message: text
-						}
-					}
-				})
-				.catch(err => {
-					console.error(err)
-					return {
-						success: false,
-						message: "Error en la funcion CreateCustomVoice()"
-					}
-				}
-				);
+			const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${userData.customvoice.selectedId}?optimize_streaming_latency=3`, options)
+
+			console.log("custom voice res:", res.status)
+			if (res.status != 200) {
+				const json = await res.json()
+				console.log("req json:", json)
+				throw new Error("Error en la solicitud, esta es la informacion del body:" + toString(json))
+			}
+			
+			const audioBuffer = await res.arrayBuffer()
+			const folderTrace = path.join(__dirname, "../..", `/src/audio/${guildId}.mp3`)
+			const data = fs.writeFileSync(folderTrace, Buffer.from(audioBuffer), "base64")
+			const connection = joinVoiceChannel({
+				channelId: voiceChannelId,
+				guildId: guildId,
+				adapterCreator: guild.voiceAdapterCreator
+			})
+			const player = createAudioPlayer()
+			const resource = createAudioResource(folderTrace, { inlineVolume: true })
+			resource.volume.setVolume(0.5)
+			connection.subscribe(player)
+			player.play(resource)
 			return {
-				success: res.success,
-				message: res.message
+				success: true,
+				message: text
 			}
 		} else {
 			const connection = joinVoiceChannel({
@@ -162,12 +153,11 @@ const VoiceManager = async ({ userid, voice, text, voiceChannelId, guildId }) =>
 				adapterCreator: guild.voiceAdapterCreator
 			})
 
-			const res = await CreateVoice(text, voice, guildId)
+			const res = await CreateVoice(text, voice || userData.voice, guildId)
 				.then(FileName => {
 					const player = createAudioPlayer()
 					const parte = path.join(__dirname, "../..", `/src/audio/${FileName}.mp3`)
 					const resource = createAudioResource(parte, { inlineVolume: true })
-					console.log("audio resource")
 					resource.volume.setVolume(guildData.volume)
 					connection.subscribe(player)
 					player.play(resource)

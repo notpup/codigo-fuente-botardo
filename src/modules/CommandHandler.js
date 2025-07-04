@@ -50,6 +50,24 @@ const GetSlashCommands = () => {
 			]
 		},
 		{
+			name: "speak",
+			description: "Reproduce texto a voz con el bot",
+			options: [
+				{
+					name: "texto",
+					description: "Texto a escuchar",
+					type: ApplicationCommandOptionType.String,
+					required: true
+				},
+				{
+					name: "voz",
+					description: "Nombre de la voz a elegir",
+					type: ApplicationCommandOptionType.String,
+					required: false,
+				},
+			]
+		},
+		{
 			name: "myvoice",
 			description: "Establece tu voz al momento de hablar",
 			options: [
@@ -76,6 +94,18 @@ const GetSlashCommands = () => {
 		{
 			name: "voices",
 			description: "Devuelve la lista de voces",
+			options: [
+				{
+					name: "pagina",
+					description: "Numero de pagina de voces",
+					type: ApplicationCommandOptionType.Number,
+					required: true,
+				}
+			]
+		},
+		{
+			name: "customvoices",
+			description: "Devuelve la lista de voces custom",
 			options: [
 				{
 					name: "pagina",
@@ -114,78 +144,83 @@ const CommandsInit = async (client) => {
 		)
 		console.log("Slash commands registrados")
 		client.on("interactionCreate", async (interaction) => {
-			if (!interaction.isChatInputCommand()) return
+			try {
+				if (!interaction.isChatInputCommand()) return
+				const userid = interaction.user.id
+				await interaction.deferReply()
+				if (interaction.commandName == "myvoice") {
 
-			const userid = interaction.user.id
-			if (interaction.commandName == "myvoice") {
-				const voice = interaction.options.get("voz")
+					const voice = interaction.options.get("voz")
 
-				let userdata = await users.findOne({ userid })
-				let serverData = await servers.findOne({ guildid: interaction.guildId })
+					let userdata = await users.findOne({ userid })
+					let serverData = await servers.findOne({ guildid: interaction.guildId })
 
-				if (userdata == null) {
-					userdata = await users.create({
-						userid,
-					})
-				}
-				if (serverData == null) {
-					serverData = await servers.create({
-						guildid: interaction.guildId,
-					})
-				}
-
-				const exactVoice = GetExactVoiceName(voice.value, (userdata.premium === true || serverData.premium === true))
-				if (!exactVoice) {
-					if (String(voice.value).toLowerCase() === "custom") {
-						return interaction.reply("No tenes permiso para usar esa voz!")
-					} else {
-						return interaction.reply("Voz no encontrada, podes ver la lista de voces usando el comando /voices")
+					if (userdata == null) {
+						userdata = await users.create({
+							userid,
+						})
 					}
-					
-				}
+					if (serverData == null) {
+						serverData = await servers.create({
+							guildid: interaction.guildId,
+						})
+					}
 
-				userdata.voice = exactVoice.Id
-				await userdata.save()
+					const exactVoice = GetExactVoiceName(voice.value, (userdata.premium === true || serverData.premium === true))
+					if (!exactVoice) {
+						if (String(voice.value).toLowerCase() === "custom") {
+							return await interaction.editReply("No tenes permiso para usar esa voz!")
+						} else {
+							return await interaction.editReply("Voz no encontrada, podes ver la lista de voces usando el comando /voices")
+						}
 
-				interaction.reply(`Tu voz por defecto ahora es **${exactVoice.Id}**`)
-			} else if (interaction.commandName == "invite") {
-				interaction.reply({ content: `Enlace de invitacion:\n${process.env.INVITELINK}`, ephemeral: true })
-			} else if (interaction.commandName == "voices") {
-				let pagina = interaction.options.get("pagina")
-				const page = pagina.value || 1
+					}
 
-				const voicesEmbed = new EmbedBuilder()
-				.setColor(0x0099FF)
-				.setTitle(`Lista de voces no-premium: (Pagina ${page})`)
-				
+					userdata.voice = exactVoice.Id
+					await userdata.save()
 
-				GetAllVoices().slice(page*25, (page+1)*25).forEach(e => {
-					voicesEmbed.addFields({
-						name: e.Id, value: e.LanguageName, inline: true
+					return await interaction.editReply(`Tu voz por defecto ahora es **${exactVoice.Id}**`)
+				} else if (interaction.commandName == "invite") {
+					return await interaction.editReply({ content: `Enlace de invitacion:\n${process.env.INVITELINK}`, ephemeral: true })
+				} else if (interaction.commandName == "voices") {
+					let pagina = interaction.options.get("pagina")
+					const page = pagina.value || 1
+
+					const voicesEmbed = new EmbedBuilder()
+						.setColor(0x0099FF)
+						.setTitle(`Lista de voces no-premium: (Pagina ${page})`)
+
+
+					GetAllVoices().slice(page * 25, (page + 1) * 25).forEach(e => {
+						voicesEmbed.addFields({
+							name: e.Id, value: e.LanguageName, inline: true
+						})
 					})
-				})
-				console.log(voicesEmbed)
-				
+					console.log(voicesEmbed)
+					interaction.editReply({ embeds: [voicesEmbed] })
 
-				interaction.reply({ embeds: [ voicesEmbed ] })
+				} else if (interaction.commandName == "tts" || interaction.commandName == "speak") {
+					let text = interaction.options.get("texto")
+					let voice = interaction.options.get("voz")
 
-			} else if (interaction.commandName == "tts" || interaction.commandName == "speak") {
-				let text = interaction.options.get("texto")
-				let voice = interaction.options.get("voz")
+					const response = await VoiceManager({
+						userid: userid,
+						voice: voice ? voice.value.trim() : null,
+						text: text.value.trim(),
+						voiceChannelId: interaction.member.voice.channelId,
+						guildId: interaction.guildId
+					})
 
-				const response = await VoiceManager({
-					userid: userid,
-					voice: voice ? voice.value.trim() : null,
-					text: text.value.trim(),
-					voiceChannelId: interaction.member.voice.channelId,
-					guildId: interaction.guildId
-				})
-
-				if (response.success) {
-					interaction.reply(response.message)
-				} else {
-					interaction.reply(response.message)
+					if (response.success) {
+						return await interaction.editReply(response.message)
+					} else {
+						return await interaction.editReply(response.message)
+					}
 				}
+			} catch (err) {
+				console.log("CRITICAL ERROR:")
+				console.log(err)
+				return await interaction.editReply("error")
 			}
 		})
 

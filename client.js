@@ -25,23 +25,33 @@ client.on("ready", () => {
 	console.log("Bot en linea broder")
 	CommandsInit(client)
 	const func = () => {
-		const Counts = GetCounts(client)
-		client.user.setPresence({
-			activities: [
-				{
-					name: `${Counts.servers} servers w/ ${Counts.members} members`,
-					type: ActivityType.Watching
-				}
-			],
-			status: "dnd"
-		})
+		try {
+			const Counts = GetCounts(client)
+			client.user.setPresence({
+				activities: [
+					{
+						name: `${Counts.servers} servers w/ ${Counts.members} members`,
+						type: ActivityType.Watching
+					}
+				],
+				status: "dnd"
+			})
+		} catch(err) {
+			console.log("Error en setPrecense:")
+			console.log(err)
+		}
+		
 	}
-	setInterval(func, 30*1000) // Update cada 30s
+	setInterval(func, 30 * 1000) // Update cada 30s
 	func()
 })
 
 client.on("messageCreate", async (message) => {
 	try {
+		if (message.member == null) return
+		if (message.member.voice == null) return
+		if (message.member.voice.channel == null) return
+
 		const vc = message.member.voice.channel
 		const msg = message.content
 
@@ -68,7 +78,7 @@ client.on("messageCreate", async (message) => {
 					split.shift()
 					messageContent = split.join(" ").trim()
 				} else {
-					const finded = await usersdata.findOne({userid: message.author.id})
+					const finded = await usersdata.findOne({ userid: message.author.id })
 					if (finded) {
 						UsedVoice = finded.voice
 					}
@@ -76,13 +86,13 @@ client.on("messageCreate", async (message) => {
 
 				if (messageContent.length == 0) return
 
-				if (messageContent.toLowerCase() == "pene"){
+				if (messageContent.toLowerCase() == "pene") {
 					message.reply("comes")
 				}
-				
+
 				const response = await VoiceManager({
 					userid: message.author.id,
-					voice: Voice ? Voice.trim() : null,
+					voice: Voice ? Voice.Id : null,
 					text: messageContent,
 					voiceChannelId: vc.id,
 					guildId: message.guildId
@@ -108,7 +118,7 @@ client.on("messageCreate", async (message) => {
 					message.reply("Error al procesar la solicitud en AWS")
 				})*/
 
-				
+
 			}
 		} else {
 		}
@@ -119,30 +129,32 @@ client.on("messageCreate", async (message) => {
 })
 
 client.on("voiceStateUpdate", async (oldState, newState) => {
-	console.log(oldState.channelId, newState.channelId)
-	if (oldState.channelId != newState.channelId) {
-		//const disconnectionChannelId = oldState.channelId
-		if (oldState.channel) {
-			const botIsIn = oldState.channel.members.some(member => {
-				if (member.user.id == client.user.id) return true
-			})
-			const hasUsers = oldState.channel.members.some(member => {
-				if (!member.user.bot) return true
-			})
+	try {
+		if (oldState.channelId != newState.channelId) {
+			//const disconnectionChannelId = oldState.channelId
+			if (oldState.channel) {
+				const botIsIn = oldState.channel.members.some(member => {
+					if (member.user.id == client.user.id) return true
+				})
+				const hasUsers = oldState.channel.members.some(member => {
+					if (!member.user.bot) return true
+				})
 
-			if (!hasUsers && botIsIn) {
-				const connection = getVoiceConnection(oldState.guild.id)
-				if (connection) {
-					connection.destroy()
+				if (!hasUsers && botIsIn) {
+					const connection = getVoiceConnection(oldState.guild.id)
+					if (connection) {
+						connection.destroy()
+					}
 				}
 			}
+		} else {
+
 		}
-	} else {
-		
-		//console.log("usuario id:", newState.id)
-		//console.log("Usuario se conecto al vc:", newState.channelId)
-		
+	} catch (err) {
+		console.log("Error detectado en 'voiceStateUpdate':")
+		console.log(err)
 	}
+
 })
 
 client.login(process.env.DISCORD_LOGINTOKEN)
